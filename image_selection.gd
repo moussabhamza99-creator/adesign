@@ -1,19 +1,16 @@
 extends Control
 # ═══════════════════════════════════════════════════════════════
-#  ImageSelection — Redesigned for the clean white theme
+#  ImageSelection — Redesigned with white theme & corrected imports
 # ═══════════════════════════════════════════════════════════════
 
 signal image_selected(path: String)
 signal import_requested()
 
+@onready var main_ui        = get_parent()
 @onready var grid_container = $VBoxContainer/ScrollContainer/MarginContainer/GridContainer
 @onready var title_label    = $VBoxContainer/TopBar/HBox/TitleLabel
-@onready var stars_label    = $VBoxContainer/TopBar/HBox/StarsLabel
 @onready var import_btn     = $VBoxContainer/TopBar/HBox/ImportBtn
 @onready var settings_btn   = $VBoxContainer/TopBar/HBox/SettingsBtn
-@onready var rewards_btn    = $VBoxContainer/TopBar/HBox/RewardsBtn
-@onready var settings_panel = $SettingsPanel
-@onready var rewards_panel  = $RewardsPanel
 @onready var topbar         = $VBoxContainer/TopBar
 @onready var bg_rect        = $BgRect
 
@@ -21,19 +18,10 @@ const PAGES_PATH = "res://assets/coloring_pages/"
 
 func _ready() -> void:
 	import_btn.pressed.connect(func(): import_requested.emit())
-	settings_btn.pressed.connect(_toggle_settings)
-	rewards_btn.pressed.connect(_toggle_rewards)
-	$SettingsPanel/PanelContainer/VBox/CloseBtn.pressed.connect(func(): settings_panel.hide())
-	$RewardsPanel/PanelContainer/VBox/CloseBtn.pressed.connect(func():  rewards_panel.hide())
-	$SettingsPanel/PanelContainer/VBox/SoundBtn.pressed.connect(_on_sound_toggle)
-	$SettingsPanel/PanelContainer/VBox/LangBox/LangFR.pressed.connect(func(): GameManager.set_language("fr"))
-	$SettingsPanel/PanelContainer/VBox/LangBox/LangEN.pressed.connect(func(): GameManager.set_language("en"))
-	$SettingsPanel/PanelContainer/VBox/LangBox/LangAR.pressed.connect(func(): GameManager.set_language("ar"))
+	settings_btn.pressed.connect(func(): main_ui.toggle_settings())
 	GameManager.language_changed.connect(_refresh_ui)
-	GameManager.rewards_updated.connect(_refresh_stars)
-	GameManager.sound_toggled.connect(_refresh_sound_btn)
 	ThemeManager.layout_updated.connect(_apply_theme)
-	AdManager.show_banner()
+
 	_apply_theme()
 	_refresh_ui(GameManager.current_language)
 	_load_images()
@@ -51,58 +39,24 @@ func _apply_theme() -> void:
 	title_label.add_theme_color_override("font_color", tm.APP_TITLE)
 	title_label.add_theme_font_size_override("font_size", tm.font_size_title)
 
-	stars_label.add_theme_color_override("font_color", tm.APP_ORANGE)
-	stars_label.add_theme_font_size_override("font_size", tm.font_size_label)
+	_style_header_btn(settings_btn, tm.APP_GRAY, Color(0.3, 0.3, 0.3))
+	_style_header_btn(import_btn,   tm.APP_BLUE, Color(1, 1, 1))
 
-	_style_header_btn(settings_btn, tm.APP_YELLOW)
-	_style_header_btn(rewards_btn,  tm.APP_ORANGE)
-	_style_header_btn(import_btn,   tm.C_SKY2)
-
-	_style_overlay_panels()
-
-func _style_header_btn(btn: Button, bg: Color) -> void:
+func _style_header_btn(btn: Button, bg: Color, fg: Color) -> void:
 	var tm = ThemeManager
 	btn.add_theme_stylebox_override("normal", tm.make_square_rounded(bg, 16))
-	btn.add_theme_color_override("font_color", Color(1,1,1))
-
-func _style_overlay_panels() -> void:
-	var tm = ThemeManager
-	for pname in ["SettingsPanel", "RewardsPanel"]:
-		var ov  = get_node(pname)
-		ov.get_node("Bg").color = Color(0, 0, 0, 0.4)
-		var pc  = ov.get_node("PanelContainer")
-		pc.add_theme_stylebox_override("panel", tm.make_card(tm.C_CARD, 32))
-
-	var sv = $SettingsPanel/PanelContainer/VBox
-	tm.style_btn(sv.get_node("SoundBtn"),       tm.C_SKY,    tm.C_WHITE)
-	tm.style_btn(sv.get_node("LangBox/LangFR"), tm.C_GRASS,  tm.C_WHITE)
-	tm.style_btn(sv.get_node("LangBox/LangEN"), tm.C_BLUE,   tm.C_WHITE)
-	tm.style_btn(sv.get_node("LangBox/LangAR"), tm.C_CANDY,  tm.C_WHITE)
-	tm.style_btn(sv.get_node("CloseBtn"),       Color(0.9, 0.9, 0.9), tm.C_INK)
+	btn.add_theme_stylebox_override("hover",  tm.make_square_rounded(bg.lightened(0.1), 16))
+	btn.add_theme_stylebox_override("pressed", tm.make_square_rounded(bg.darkened(0.1), 16))
+	btn.add_theme_color_override("font_color", fg)
 
 func _refresh_ui(_lang: String) -> void:
-	title_label.text  = "Coloring"
+	title_label.text  = GameManager.tr_key("app_title")
 	_rebuild_grid()
-
-func _refresh_stars() -> void:
-	stars_label.text = "⭐ %d" % GameManager.get_total_stars()
-
-func _refresh_sound_btn(enabled: bool) -> void:
-	$SettingsPanel/PanelContainer/VBox/SoundBtn.text = GameManager.tr_key("sound_on" if enabled else "sound_off")
-
-func _on_sound_toggle() -> void:
-	GameManager.toggle_sound()
-
-func _toggle_settings() -> void:
-	settings_panel.visible = !settings_panel.visible
-	rewards_panel.hide()
-
-func _toggle_rewards() -> void:
-	rewards_panel.visible = !rewards_panel.visible
-	settings_panel.hide()
-	_populate_rewards()
+	_apply_theme()
 
 func _load_images() -> void:
+	for c in grid_container.get_children():
+		c.queue_free()
 	var found: Array[String] = []
 	var dir = DirAccess.open(PAGES_PATH)
 	if dir:
@@ -130,7 +84,19 @@ func _create_thumbnail_button(path: String) -> void:
 	btn.custom_minimum_size = Vector2(sz, sz)
 	btn.expand_icon = true
 	btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	btn.add_theme_stylebox_override("normal", tm.make_card(tm.C_CARD, 24))
+
+	var normal = tm.make_card(tm.C_CARD, 24)
+	var hover  = tm.make_card(tm.C_CARD, 24)
+	hover.border_width_left = 4
+	hover.border_width_right = 4
+	hover.border_width_top = 4
+	hover.border_width_bottom = 4
+	hover.border_color = tm.APP_BLUE
+	var pressed = tm.make_card(tm.C_CARD.darkened(0.05), 24)
+
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover",  hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
 
 	var img = _load_res_image(path)
 	if img: btn.icon = ImageTexture.create_from_image(img)
@@ -140,16 +106,16 @@ func _create_thumbnail_button(path: String) -> void:
 	grid_container.add_child(btn)
 
 func _load_res_image(res_path: String) -> Image:
+	if not res_path.begins_with("res://"):
+		return Image.load_from_file(res_path)
 	if ResourceLoader.exists(res_path):
 		var tex = ResourceLoader.load(res_path, "Texture2D", ResourceLoader.CACHE_MODE_REUSE)
 		if tex is Texture2D: return tex.get_image()
+	var file = FileAccess.open(res_path, FileAccess.READ)
+	if file:
+		var bytes = file.get_buffer(file.get_length())
+		file.close()
+		var img = Image.new()
+		if img.load_png_from_buffer(bytes) == OK:
+			return img
 	return null
-
-func _populate_rewards() -> void:
-	var box = $RewardsPanel/PanelContainer/VBox
-	for c in box.get_children():
-		if c.name != "Title" and c.name != "CloseBtn": c.queue_free()
-	for img_path in GameManager.completed_images:
-		var lbl = Label.new()
-		lbl.text = "⭐⭐⭐ " + (img_path as String).get_file().get_basename()
-		box.add_child(lbl)

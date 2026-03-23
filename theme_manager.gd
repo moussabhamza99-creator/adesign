@@ -21,11 +21,12 @@ const C_TEXT_MUTED   = Color(0.53, 0.46, 0.63, 1)   # #8875a0 gris-violet
 const C_SHADOW       = Color(0.18, 0.09, 0.33, 0.18)# shadow card
 
 # App image colors
-const APP_BG         = Color(1.0, 1.0, 1.0, 1.0)
-const APP_TITLE      = Color(0.1, 0.1, 0.1, 1.0)
+const APP_BG         = Color(0.96, 0.96, 0.96, 1.0) # Light gray background
+const APP_TITLE      = Color(0.66, 0.18, 0.20, 1.0) # Dark red for level text
 const APP_ORANGE     = Color(0.96, 0.53, 0.38, 1.0)
 const APP_YELLOW     = Color(0.97, 0.88, 0.36, 1.0)
-const APP_BLUE       = Color(0.36, 0.36, 0.96, 1.0)
+const APP_BLUE       = Color(0.00, 0.36, 0.56, 1.0) # Dark blue for Undo
+const APP_GRAY       = Color(0.88, 0.88, 0.88, 1.0) # Gray for Settings
 const APP_BUBBLE     = Color(1.0, 1.0, 1.0, 1.0)
 
 # Alias pour compatibilité avec les scripts existants

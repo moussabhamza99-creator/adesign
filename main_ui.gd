@@ -1,27 +1,27 @@
 extends Control
 # ═══════════════════════════════════════════════════════════════
-#  MainUI — Improved to match the image while preserving features
+#  MainUI — Corrected navigation and feature access
 # ═══════════════════════════════════════════════════════════════
 
-@onready var viewport        = $VBoxContainer/ColoringArea/ColoringSceneContainer/SubViewport
+@onready var viewport        = $VBoxContainer/ColoringArea/Margin/WhiteCard/ColoringSceneContainer/SubViewport
 @onready var coloring_ui     = $VBoxContainer
 @onready var topbar          = $VBoxContainer/TopBar
 @onready var level_label     = $VBoxContainer/TopBar/LevelLabel
 @onready var settings_btn    = $VBoxContainer/TopBar/SettingsBtn
-@onready var reset_btn       = $VBoxContainer/TopBar/ResetBtn
+@onready var undo_btn        = $VBoxContainer/TopBar/UndoBtn
 
-@onready var bubble          = $VBoxContainer/SubHeader/Bubble
-@onready var title_label     = $VBoxContainer/SubHeader/Bubble/HBox/TitleLabel
-@onready var title_icon      = $VBoxContainer/SubHeader/Bubble/HBox/Icon
+@onready var white_card      = $VBoxContainer/ColoringArea/Margin/WhiteCard
+@onready var tap_to_color    = $VBoxContainer/ColoringArea/Margin/WhiteCard/TapToColor
+@onready var star_btn        = $VBoxContainer/ColoringArea/StarBtn
 
-@onready var grid_btn        = $VBoxContainer/ColoringArea/SideLeft/GridBtn
-@onready var pencil_btn      = $VBoxContainer/ColoringArea/SideLeft/PencilBtn
-@onready var save_btn        = $VBoxContainer/ColoringArea/SideLeft/SaveBtn
-@onready var skip_btn        = $VBoxContainer/ColoringArea/SideRight/SkipBtn
-@onready var shop_btn        = $VBoxContainer/ColoringArea/SideRight/ShopBtn
+@onready var palette_panel   = $VBoxContainer/UIPalettePanel
+@onready var palette_hbox    = $VBoxContainer/UIPalettePanel/HBox/PaletteScroll/PaletteHBox
+@onready var save_tool       = $VBoxContainer/UIPalettePanel/HBox/ToolsHBox/SaveTool
+@onready var pencil_tool      = $VBoxContainer/UIPalettePanel/HBox/ToolsHBox/PencilTool
+@onready var back_tool        = $VBoxContainer/UIPalettePanel/HBox/ToolsHBox/BackTool
 
-@onready var palette_hbox    = $VBoxContainer/UIPalette/PaletteScroll/HBox
-@onready var back_btn        = $VBoxContainer/UIPalette/BackBtn
+@onready var settings_panel   = $SettingsPanel
+@onready var rewards_panel    = $RewardsPanel
 
 @onready var bg_rect         = $BgRect
 @onready var reward_popup    = $RewardPopup
@@ -40,17 +40,25 @@ var _selected_btn: Button = null
 func _ready() -> void:
 	image_selection.image_selected.connect(_on_png_selected)
 	image_selection.import_requested.connect(_on_import_pressed)
-	back_btn.pressed.connect(_show_menu)
-	settings_btn.pressed.connect(func(): image_selection._toggle_settings())
-	reset_btn.pressed.connect(_on_reset_pressed)
-	save_btn.pressed.connect(_on_save_pressed)
-	grid_btn.pressed.connect(_show_menu)
+	undo_btn.pressed.connect(_on_reset_pressed)
+	settings_btn.pressed.connect(toggle_settings)
+	save_tool.pressed.connect(_on_save_pressed)
+	back_tool.pressed.connect(_show_menu)
+	star_btn.pressed.connect(toggle_rewards)
+
+	$SettingsPanel/PanelContainer/VBox/CloseBtn.pressed.connect(func(): settings_panel.hide())
+	$RewardsPanel/PanelContainer/VBox/CloseBtn.pressed.connect(func():  rewards_panel.hide())
+	$SettingsPanel/PanelContainer/VBox/SoundBtn.pressed.connect(GameManager.toggle_sound)
+	$SettingsPanel/PanelContainer/VBox/LangBox/LangFR.pressed.connect(func(): GameManager.set_language("fr"))
+	$SettingsPanel/PanelContainer/VBox/LangBox/LangEN.pressed.connect(func(): GameManager.set_language("en"))
+	$SettingsPanel/PanelContainer/VBox/LangBox/LangAR.pressed.connect(func(): GameManager.set_language("ar"))
 
 	file_dialog.file_selected.connect(_on_png_selected)
 	$ImportPopup/Panel/VBox/BrowseBtn.pressed.connect(_on_browse_pressed)
 	$ImportPopup/Panel/VBox/CancelBtn.pressed.connect(func(): import_popup.hide())
 
 	GameManager.language_changed.connect(_refresh_labels)
+	GameManager.sound_toggled.connect(_refresh_sound_btn)
 	ThemeManager.layout_updated.connect(_apply_theme)
 
 	_build_palette()
@@ -65,49 +73,67 @@ func _apply_theme() -> void:
 	var tm = ThemeManager
 	bg_rect.color = tm.APP_BG
 
-	# Top bar styling
-	_style_app_btn(settings_btn, tm.APP_YELLOW, Color(0.9, 0.6, 0.2))
-	_style_app_btn(reset_btn,    tm.C_CANDY,    Color(0.8, 0.2, 0.2))
+	_style_app_btn(settings_btn, tm.APP_GRAY, Color(0.3, 0.3, 0.3))
+	_style_app_btn(undo_btn,     tm.APP_BLUE, Color(1, 1, 1))
+
+	var tb_st = StyleBoxFlat.new()
+	tb_st.bg_color = tm.APP_BG
+	tb_st.shadow_color = Color(0,0,0,0.05)
+	tb_st.shadow_size = 4
+	topbar.add_theme_stylebox_override("panel", tb_st)
+
 	level_label.add_theme_color_override("font_color", tm.APP_TITLE)
 	level_label.add_theme_font_size_override("font_size", tm.font_size_title)
 
-	# SubHeader Bubble
+	var wc = StyleBoxFlat.new()
+	wc.bg_color = Color(1, 1, 1)
+	wc.corner_radius_top_left = 80
+	wc.corner_radius_top_right = 80
+	wc.corner_radius_bottom_left = 80
+	wc.corner_radius_bottom_right = 80
+	wc.shadow_color = Color(0, 0, 0, 0.05)
+	wc.shadow_size = 20
+	wc.shadow_offset = Vector2(0, 10)
+	white_card.add_theme_stylebox_override("panel", wc)
+
+	var tc = StyleBoxFlat.new()
+	tc.bg_color = tm.APP_YELLOW
+	tc.corner_radius_top_left = 30
+	tc.corner_radius_top_right = 30
+	tc.corner_radius_bottom_left = 30
+	tc.corner_radius_bottom_right = 30
+	tap_to_color.add_theme_stylebox_override("panel", tc)
+	var tcl = tap_to_color.get_node("Label")
+	tcl.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
+	tcl.add_theme_font_size_override("font_size", 22)
+
 	var sb = StyleBoxFlat.new()
-	sb.bg_color = tm.APP_BUBBLE
-	sb.corner_radius_top_left = 40
-	sb.corner_radius_top_right = 40
-	sb.corner_radius_bottom_left = 40
-	sb.corner_radius_bottom_right = 40
-	sb.border_width_left = 2
-	sb.border_width_right = 2
-	sb.border_width_top = 2
-	sb.border_width_bottom = 2
-	sb.border_color = Color(0.9, 0.9, 0.9)
-	sb.shadow_color = Color(0, 0, 0, 0.05)
+	sb.bg_color = tm.APP_YELLOW
+	sb.corner_radius_top_left = 80
+	sb.corner_radius_top_right = 80
+	sb.corner_radius_bottom_left = 80
+	sb.corner_radius_bottom_right = 80
+	sb.shadow_color = Color(0, 0, 0, 0.1)
 	sb.shadow_size = 10
-	sb.shadow_offset = Vector2(0, 4)
-	bubble.add_theme_stylebox_override("panel", sb)
-	title_label.add_theme_color_override("font_color", tm.APP_TITLE)
-	title_label.add_theme_font_size_override("font_size", tm.font_size_label)
+	sb.shadow_offset = Vector2(0, 5)
+	star_btn.add_theme_stylebox_override("normal", sb)
+	star_btn.add_theme_stylebox_override("hover",  sb.duplicate())
+	star_btn.add_theme_color_override("font_color", Color(0.4, 0.3, 0.0))
+	star_btn.add_theme_font_size_override("font_size", 80)
 
-	# Side buttons
-	_style_app_btn(grid_btn,   tm.C_SKY2, tm.APP_BLUE)
-	_style_app_btn(pencil_btn, tm.APP_YELLOW, tm.APP_ORANGE)
-	_style_app_btn(save_btn,   tm.C_GRASS, tm.C_GRASS.darkened(0.2))
-	_style_app_btn(skip_btn,   tm.C_CANDY, tm.C_CANDY.darkened(0.2))
-	_style_app_btn(shop_btn,   tm.APP_YELLOW, tm.APP_ORANGE)
+	var pp = StyleBoxFlat.new()
+	pp.bg_color = Color(1, 1, 1)
+	pp.corner_radius_top_left = 60
+	pp.corner_radius_top_right = 60
+	pp.content_margin_left = 40
+	pp.content_margin_right = 40
+	palette_panel.add_theme_stylebox_override("panel", pp)
 
-	# Back button (X)
-	var xb = StyleBoxFlat.new()
-	xb.bg_color = Color(0.9, 0.4, 0.4)
-	xb.corner_radius_top_left = 12
-	xb.corner_radius_top_right = 12
-	xb.corner_radius_bottom_left = 12
-	xb.corner_radius_bottom_right = 12
-	xb.shadow_color = Color(0, 0, 0, 0.2)
-	xb.shadow_size = 4
-	xb.shadow_offset = Vector2(0, 2)
-	back_btn.add_theme_stylebox_override("normal", xb)
+	_style_palette_tool(save_tool)
+	_style_palette_tool(pencil_tool)
+	_style_palette_tool(back_tool)
+
+	_style_overlay_panels()
 
 	_restyle_palette()
 
@@ -120,9 +146,48 @@ func _style_app_btn(btn: Button, bg: Color, icon_col: Color) -> void:
 	btn.add_theme_color_override("font_color", icon_col)
 	btn.add_theme_font_size_override("font_size", 40)
 
-# ══════════════════════════════════════════════════════════════
-#  PALETTE
-# ══════════════════════════════════════════════════════════════
+func _style_palette_tool(btn: Button) -> void:
+	var tm = ThemeManager
+	var s = tm.make_square_rounded(tm.APP_GRAY, 20)
+	btn.add_theme_stylebox_override("normal", s)
+	btn.add_theme_stylebox_override("hover",  tm.make_square_rounded(tm.APP_GRAY.lightened(0.05), 20))
+	btn.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
+	btn.add_theme_font_size_override("font_size", 40)
+
+func _style_overlay_panels() -> void:
+	var tm = ThemeManager
+	for panel in [settings_panel, rewards_panel]:
+		panel.get_node("Bg").color = Color(0, 0, 0, 0.4)
+		var pc = panel.get_node("PanelContainer")
+		pc.add_theme_stylebox_override("panel", tm.make_card(tm.C_CARD, 32))
+
+	var sv = settings_panel.get_node("PanelContainer/VBox")
+	tm.style_btn(sv.get_node("SoundBtn"),       tm.C_SKY,    tm.C_WHITE)
+	tm.style_btn(sv.get_node("LangBox/LangFR"), tm.C_GRASS,  tm.C_WHITE)
+	tm.style_btn(sv.get_node("LangBox/LangEN"), tm.C_BLUE,   tm.C_WHITE)
+	tm.style_btn(sv.get_node("LangBox/LangAR"), tm.C_CANDY,  tm.C_WHITE)
+	tm.style_btn(sv.get_node("CloseBtn"),       Color(0.9, 0.9, 0.9), tm.C_INK)
+
+func toggle_settings() -> void:
+	settings_panel.visible = !settings_panel.visible
+	rewards_panel.hide()
+
+func toggle_rewards() -> void:
+	rewards_panel.visible = !rewards_panel.visible
+	settings_panel.hide()
+	if rewards_panel.visible:
+		_populate_rewards()
+
+func _populate_rewards() -> void:
+	var box = rewards_panel.get_node("PanelContainer/VBox")
+	for c in box.get_children():
+		if c.name != "Title" and c.name != "CloseBtn": c.queue_free()
+	for img_path in GameManager.completed_images:
+		var lbl = Label.new()
+		lbl.text = "⭐⭐⭐ " + (img_path as String).get_file().get_basename()
+		lbl.add_theme_color_override("font_color", ThemeManager.C_INK)
+		box.add_child(lbl)
+
 func _build_palette() -> void:
 	for c in palette_hbox.get_children():
 		c.queue_free()
@@ -136,13 +201,11 @@ func _build_palette() -> void:
 
 func _restyle_palette() -> void:
 	var tm = ThemeManager
-	var sz = tm.palette_btn_size
+	var sz = 120
 	for btn in palette_hbox.get_children():
 		btn.custom_minimum_size = Vector2(sz, sz)
 		var col: Color = btn.get_meta("paint_color")
 		btn.add_theme_stylebox_override("normal",  tm.make_square_rounded(col, 32))
-		btn.add_theme_stylebox_override("hover",   tm.make_square_rounded(col.lightened(0.1), 32))
-		btn.add_theme_stylebox_override("pressed", tm.make_square_rounded(col.darkened(0.1), 32))
 
 func _on_color_selected(btn: Button) -> void:
 	if current_coloring_scene:
@@ -155,11 +218,11 @@ func _on_color_selected(btn: Button) -> void:
 func _highlight_btn(btn: Button) -> void:
 	var col: Color = btn.get_meta("paint_color")
 	var s = ThemeManager.make_square_rounded(col, 32)
-	s.border_width_left = 6
-	s.border_width_right = 6
-	s.border_width_top = 6
-	s.border_width_bottom = 6
-	s.border_color = Color(1, 1, 1, 0.8)
+	s.border_width_left = 8
+	s.border_width_right = 8
+	s.border_width_top = 8
+	s.border_width_bottom = 8
+	s.border_color = Color(1, 1, 1, 0.6)
 	btn.add_theme_stylebox_override("normal", s)
 
 func _deselect_btn(btn: Button) -> void:
@@ -168,9 +231,6 @@ func _deselect_btn(btn: Button) -> void:
 	var col: Color = btn.get_meta("paint_color")
 	btn.add_theme_stylebox_override("normal", ThemeManager.make_square_rounded(col, 32))
 
-# ══════════════════════════════════════════════════════════════
-#  NAVIGATION
-# ══════════════════════════════════════════════════════════════
 func _on_banner_loaded() -> void:
 	banner_placeholder.custom_minimum_size.y = 80
 
@@ -179,6 +239,8 @@ func _show_menu() -> void:
 	coloring_ui.visible     = false
 	reward_popup.hide()
 	save_popup.visible      = false
+	settings_panel.hide()
+	rewards_panel.hide()
 	_selected_btn           = null
 	if current_coloring_scene:
 		current_coloring_scene.queue_free()
@@ -193,14 +255,7 @@ func _load_png_scene(path: String) -> void:
 	image_selection.visible = false
 	coloring_ui.visible     = true
 	current_image_path      = path
-
-	title_label.text = path.get_file().get_basename().capitalize()
-	title_icon.texture = null
-
-	# Using completion info to "fake" level or just show image index
-	var total = GameManager.completed_images.size()
-	level_label.text = GameManager.tr_key("level") + " " + str(total + 1)
-
+	_refresh_labels("")
 	if current_coloring_scene:
 		current_coloring_scene.queue_free()
 	current_coloring_scene = png_scene_template.instantiate()
@@ -209,7 +264,6 @@ func _load_png_scene(path: String) -> void:
 	current_coloring_scene.setup_png(path)
 	current_coloring_scene.coloring_complete.connect(_on_coloring_complete)
 	AdManager.on_image_opened()
-
 	var first = palette_hbox.get_child(0)
 	if first and first.has_meta("paint_color"):
 		_on_color_selected(first)
@@ -228,9 +282,6 @@ func _on_coloring_complete() -> void:
 		)
 		reward_popup.popup_centered()
 
-# ══════════════════════════════════════════════════════════════
-#  SAUVEGARDE
-# ══════════════════════════════════════════════════════════════
 func _on_save_pressed() -> void:
 	if current_coloring_scene == null:
 		return
@@ -254,9 +305,6 @@ func _style_save_popup() -> void:
 	tm.style_btn(ok_btn, tm.C_GRASS, tm.C_WHITE)
 	ok_btn.pressed.connect(func(): save_popup.visible = false, CONNECT_ONE_SHOT)
 
-# ══════════════════════════════════════════════════════════════
-#  IMPORT
-# ══════════════════════════════════════════════════════════════
 func _on_import_pressed() -> void:
 	import_popup.visible = true
 
@@ -282,12 +330,14 @@ func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _
 	if status and selected_paths.size() > 0:
 		_on_png_selected(selected_paths[0])
 
-# ══════════════════════════════════════════════════════════════
-#  I18N
-# ══════════════════════════════════════════════════════════════
 func _refresh_labels(_lang: String) -> void:
-	# Update localized texts if needed
-	pass
+	var l = GameManager.tr_key("level")
+	var total = GameManager.completed_images.size()
+	level_label.text = l + " " + str(total + 1)
+	_refresh_sound_btn(GameManager.sound_enabled)
+
+func _refresh_sound_btn(enabled: bool) -> void:
+	settings_panel.get_node("PanelContainer/VBox/SoundBtn").text = GameManager.tr_key("sound_on" if enabled else "sound_off")
 
 func _setup_import_popup() -> void:
 	var tm = ThemeManager
