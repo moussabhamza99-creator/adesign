@@ -1,0 +1,218 @@
+[gd_scene load_steps=2 format=3 uid="uid://deoybxlh226ce"]
+
+[ext_resource type="Script" uid="uid://m8ul5mimx34p" path="res://scripts/image_selection.gd" id="1"]
+
+[node name="ImageSelection" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="BgRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.98, 0.96, 0.92, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="Panel" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 126)
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="VBoxContainer/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "Coloriage Magique"
+vertical_alignment = 1
+
+[node name="StarsLabel" type="Label" parent="VBoxContainer/TopBar/HBox"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
+[node name="RewardsBtn" type="Button" parent="VBoxContainer/TopBar/HBox"]
+custom_minimum_size = Vector2(78, 74)
+layout_mode = 2
+text = "Recompenses"
+
+[node name="SettingsBtn" type="Button" parent="VBoxContainer/TopBar/HBox"]
+custom_minimum_size = Vector2(78, 74)
+layout_mode = 2
+text = "Parametres"
+
+[node name="ImportBtn" type="Button" parent="VBoxContainer/TopBar/HBox"]
+custom_minimum_size = Vector2(78, 74)
+layout_mode = 2
+text = "+"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/ScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 2
+
+[node name="SettingsPanel" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Bg" type="ColorRect" parent="SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.07, 0.06, 0.8)
+
+[node name="PanelContainer" type="PanelContainer" parent="SettingsPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -360.0
+offset_right = 300.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPanel/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="SettingsPanel/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Parametres"
+horizontal_alignment = 1
+
+[node name="SoundBtn" type="Button" parent="SettingsPanel/PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+text = "Son ON"
+
+[node name="LangTitle" type="Label" parent="SettingsPanel/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Langue"
+horizontal_alignment = 1
+
+[node name="LangBox" type="HBoxContainer" parent="SettingsPanel/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LangFR" type="Button" parent="SettingsPanel/PanelContainer/VBox/LangBox"]
+custom_minimum_size = Vector2(105, 58)
+layout_mode = 2
+text = "FR"
+
+[node name="LangEN" type="Button" parent="SettingsPanel/PanelContainer/VBox/LangBox"]
+custom_minimum_size = Vector2(105, 58)
+layout_mode = 2
+text = "EN"
+
+[node name="LangAR" type="Button" parent="SettingsPanel/PanelContainer/VBox/LangBox"]
+custom_minimum_size = Vector2(105, 58)
+layout_mode = 2
+text = "AR"
+
+[node name="CloseBtn" type="Button" parent="SettingsPanel/PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+text = "Fermer"
+
+[node name="RewardsPanel" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Bg" type="ColorRect" parent="RewardsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.07, 0.06, 0.8)
+
+[node name="PanelContainer" type="PanelContainer" parent="RewardsPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -310.0
+offset_top = -400.0
+offset_right = 310.0
+offset_bottom = 400.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="RewardsPanel/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="RewardsPanel/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Mes Recompenses"
+horizontal_alignment = 1
+
+[node name="CloseBtn" type="Button" parent="RewardsPanel/PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+text = "Fermer"

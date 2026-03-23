@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://png_col_scene"]
+
+[ext_resource type="Script" path="res://scripts/png_coloring_manager.gd" id="1_mgr"]
+
+[node name="PngColoringScene" type="Node2D"]
+script = ExtResource("1_mgr")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+centered = true
