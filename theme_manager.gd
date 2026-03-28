@@ -20,6 +20,15 @@ const C_TEXT_LIGHT   = Color(1.00, 1.00, 1.00, 1)   # texte sur fond coloré
 const C_TEXT_MUTED   = Color(0.53, 0.46, 0.63, 1)   # #8875a0 gris-violet
 const C_SHADOW       = Color(0.18, 0.09, 0.33, 0.18)# shadow card
 
+# App image colors
+const APP_BG         = Color(0.96, 0.96, 0.96, 1.0) # Light gray background
+const APP_TITLE      = Color(0.66, 0.18, 0.20, 1.0) # Dark red for level text
+const APP_ORANGE     = Color(0.96, 0.53, 0.38, 1.0)
+const APP_YELLOW     = Color(0.97, 0.88, 0.36, 1.0)
+const APP_BLUE       = Color(0.00, 0.36, 0.56, 1.0) # Dark blue for Undo
+const APP_GRAY       = Color(0.88, 0.88, 0.88, 1.0) # Gray for Settings
+const APP_BUBBLE     = Color(1.0, 1.0, 1.0, 1.0)
+
 # Alias pour compatibilité avec les scripts existants
 const C_BG           = C_SKY
 const C_BG2          = C_SKY2
@@ -49,9 +58,9 @@ var btn_height: int       = 82
 var btn_radius: int       = 999   # capsule parfaite (--r-btn: 999px)
 var card_size: int        = 260
 var grid_columns: int     = 2
-var palette_btn_size: int = 88
+var palette_btn_size: int = 140   # Bigger for swatches
 var topbar_height: int    = 116
-var palette_height: int   = 144
+var palette_height: int   = 200
 var margin: int           = 20
 
 signal layout_updated()
@@ -114,6 +123,18 @@ func make_rounded(color: Color, radius: int = -1,
 		s.border_color        = border_color
 	return s
 
+func make_square_rounded(color: Color, radius: int = 24) -> StyleBoxFlat:
+	var s = StyleBoxFlat.new()
+	s.bg_color = color
+	s.corner_radius_top_left     = radius
+	s.corner_radius_top_right    = radius
+	s.corner_radius_bottom_left  = radius
+	s.corner_radius_bottom_right = radius
+	s.shadow_color  = Color(0, 0, 0, 0.2)
+	s.shadow_size   = 4
+	s.shadow_offset = Vector2(0, 6)
+	return s
+
 func make_card(color: Color, radius: int = 28) -> StyleBoxFlat:
 	var s = make_rounded(color, radius, C_WHITE, 3)
 	s.shadow_color  = C_SHADOW
@@ -150,6 +171,9 @@ func style_btn(btn: Button, bg: Color,
 
 # ── 31 couleurs de peinture ──────────────────────────────────
 const PALETTE_COLORS: Array = [
+	{name="Orange",     color=Color(0.96, 0.53, 0.38, 1), label=""},
+	{name="Yellow",     color=Color(0.97, 0.88, 0.36, 1), label=""},
+	{name="Blue",       color=Color(0.36, 0.36, 0.96, 1), label=""},
 	{name="Red",        color=Color(0.92, 0.18, 0.18, 1), label="🔴"},
 	{name="DarkRed",    color=Color(0.60, 0.05, 0.05, 1), label="🟥"},
 	{name="Orange",     color=Color(0.95, 0.50, 0.08, 1), label="🟠"},
